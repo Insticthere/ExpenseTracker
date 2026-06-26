@@ -1,0 +1,27 @@
+{
+  "name": "eco",
+  "module": "index.ts",
+  "type": "module",
+  "private": true,
+  "devDependencies": {
+    "@types/bun": "latest",
+    "drizzle-kit": "^0.31.10"
+  },
+  "peerDependencies": {
+    "typescript": "^5"
+  },
+  "dependencies": {
+    "@ai-sdk/google": "^3.0.79",
+    "@ai-sdk/groq": "^3.0.39",
+    "@aws-sdk/client-s3": "^3.1050.0",
+    "@aws-sdk/s3-request-presigner": "^3.1050.0",
+    "@openrouter/ai-sdk-provider": "^2.9.0",
+    "ai": "^6.0.191",
+    "dotenv": "^17.4.2",
+    "drizzle-orm": "^0.45.2",
+    "drizzle-zod": "^0.8.3",
+    "hono": "^4.12.19",
+    "postgres": "^3.4.9",
+    "zod": "^4.4.3"
+  }
+}
