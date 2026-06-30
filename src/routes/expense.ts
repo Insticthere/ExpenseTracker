@@ -1,6 +1,6 @@
 import { Hono } from "hono";
 import { db } from "../db/db-init" 
-import { expenses, budget , categories , monthlyCategoryAllocation} from '../db/schema';
+import { expenses, budget , categories , monthlyCategoryAllocation } from '../db/schema';
 import { desc, and , eq } from "drizzle-orm";
 
 const expensesRouter = new Hono()
@@ -8,6 +8,7 @@ const expensesRouter = new Hono()
 expensesRouter.post('/', async (c) => {
 
     try {
+
     const { name, amount, categoryId, paymentMethod, description } = await c.req.json();
 
     const [newExpense] = await db.insert(expenses).values({
@@ -16,7 +17,7 @@ expensesRouter.post('/', async (c) => {
       categoryId,
       paymentMethod,
       description
-    }).returning();
+    }).returning(); 
 
     return c.json({ success: true, data: newExpense });
 
@@ -90,7 +91,7 @@ expensesRouter.get('/budget/:year/:month', async (c) => {
           )
     )
 
-    return c.json({budget : budgetdata, categoryWise : categoryData})
+    return c.json({success : true, data: {budget : budgetdata, categoryWise : categoryData}})
 
 })
 
@@ -102,8 +103,14 @@ expensesRouter.get('/budget/:year', async (c) => {
             eq(budget.year, year)
           )
     )
-    
-    return c.json(budgetdata)
+
+    const categoryData = await db.select().from(monthlyCategoryAllocation).where(
+          and(
+            eq(monthlyCategoryAllocation.budgetYear, year)
+          )
+    )
+
+    return c.json({success : true, data: {budget : budgetdata, categoryWise : categoryData}})
 
 })
 
@@ -113,14 +120,13 @@ expensesRouter.post('/category', async (c) => {
     const { name } = await c.req.json();
 
     const [result] = await db
-    .insert(categories)
-    .values({
-        name : name
-    })
-    .returning();
+      .insert(categories)
+      .values({
+          name : name
+      })
+      .returning();
     
-
-    return c.json({
+    return c.json({ 
         success: true,
         data: result,
   });
@@ -130,16 +136,17 @@ expensesRouter.post('/category', async (c) => {
 expensesRouter.get('/category', async (c) => {
     const catList = await db.select().from(categories)
 
-    return c.json({data : catList})
+    return c.json({success : true , data : catList})
 });
 
-// monthlyCategoryAllocation
+// monthlyCategoryAllocation upload
 
 expensesRouter.post('/budget/category/:year/:month', async (c) => {
     const year = Number(c.req.param('year'));
     const month = Number(c.req.param('month'));
-    const { budgetInPercent, categoryId  } = await c.req.json();
 
+    const { budgetInPercent, categoryId  } = await c.req.json();
+    
     const [result] = await db
         .insert(monthlyCategoryAllocation)
         .values({
@@ -149,7 +156,11 @@ expensesRouter.post('/budget/category/:year/:month', async (c) => {
           budgetMonth : month
           })
         .onConflictDoUpdate({
-                target: [budget.year, budget.month],
+                target: [
+                          monthlyCategoryAllocation.categoryId,
+                          monthlyCategoryAllocation.budgetYear,
+                          monthlyCategoryAllocation.budgetMonth,
+                        ],
                 set: {
                   budgetInPercent : budgetInPercent,
                 }
@@ -161,8 +172,5 @@ expensesRouter.post('/budget/category/:year/:month', async (c) => {
           data : result
         });
 });
-
-
-
 
 export default expensesRouter;
